@@ -1,0 +1,14 @@
+.venv/
+.runtime/
+__pycache__/
+.pytest_cache/
+data/*
+!data/.gitkeep
+dist/
+artifacts/
+.streamlit/secrets.toml
+.env
+.env.*
+*.log
+*.zip
+.DS_Store
