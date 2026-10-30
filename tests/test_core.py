@@ -52,7 +52,7 @@ def test_timeout_retries_preserve_data(tmp_path):
     collector = Collector(session=session, sleep=Mock())
     result = collector.update(db)
     assert not result['ok']
-    assert session.get.call_count == 6  # Primary and verified historical fallback.
+    assert session.get.call_count == 2  # Primary and fallback, without automatic retries.
     assert db.all() == [draw()]
     assert '조회 실패' in result['message']
 

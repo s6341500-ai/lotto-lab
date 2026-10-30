@@ -1,11 +1,9 @@
 import json
 import importlib
 import secrets
-import os
 from dataclasses import asdict, replace
 import pandas as pd
 import streamlit as st
-from streamlit.runtime.scriptrunner import get_script_run_ctx
 from collector import Collector
 from database import Database
 from filters import FILTER_IDS, DESCRIPTIONS, build_context, number_availability, classify_consecutive
@@ -323,13 +321,6 @@ def update():
         return Collector().update(db)
 
 
-# 세션 최초 실행 시 확인. UI 조작에 따른 rerun마다 요청하지 않는다.
-if (get_script_run_ctx(suppress_warning=True) is not None
-        and menu == '대시보드' and 'startup_checked' not in st.session_state
-        and os.environ.get('LOTTO_LAB_AUTO_UPDATE', '1') != '0'):
-    st.session_state.startup_checked = True
-    update()
-
 if menu == '대시보드':
     st.title('로또 데이터 대시보드')
     st.caption('역대 당첨번호를 검증하고 안전하게 보관합니다.')
@@ -338,7 +329,7 @@ if menu == '대시보드':
     st.caption('데이터 출처: ' + (db.get_meta('data_source') or '배포에 포함된 검증된 동행복권 스냅샷'))
     st.caption('마지막 수집 성공: ' + (db.get_meta('last_success') or '기록 없음 · 초기 데이터로 분석 가능'))
     st.caption('재배포 시 버전 관리된 seed 스냅샷에서 복원합니다. 실행 중 SQLite 변경은 GitHub에 자동 반영되지 않습니다.')
-    if st.button('↻ 수동 새로고침', type='primary'):
+    if st.button('↻ 최신 회차 확인·누락 수집', type='primary'):
         update()
     status = json.loads(db.get_meta('update_status') or '{}')
     if status:

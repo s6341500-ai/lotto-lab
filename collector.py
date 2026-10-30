@@ -36,10 +36,10 @@ def parse_response(payload):
 
 
 class Collector:
-    def __init__(self, session=None, interval=0.8, retries=2, timeout=15, sleep=time.sleep):
+    def __init__(self, session=None, interval=0.8, retries=0, timeout=(3, 5), sleep=time.sleep):
         self.session = session or requests.Session()
         self.interval = max(0.5, interval)
-        self.retries = min(5, max(0, retries))
+        self.retries = min(1, max(0, retries))
         self.timeout = timeout
         self.sleep = sleep
         self.last_request = None
