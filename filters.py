@@ -14,7 +14,7 @@ DESCRIPTIONS = {
     'F03': '연속 0~1쌍 적격 · 추출 5개 3:2 / 10개 6:4',
     'F04': '번호 구간별 최대 개수 선택 (기본 2개)',
     'F05': '3개 이상 연속 금지',
-    'F06': f'확정된 최근 10회에서 {F06_MIN_OCCURRENCES}회 이상 나온 번호 제외 (보너스 제외)',
+    'F06': f'최근 10회 출현 기준 선택 (기본 {F06_MIN_OCCURRENCES}회 이상 제외, 보너스 제외)',
     'F07': '홀수 개수 2·3·4개 허용',
     'F08': '같은 끝자리 개수 제한',
     'F09': '인접 번호 최대 간격 제한',
@@ -62,12 +62,13 @@ def build_context(draws, enabled=FILTER_IDS, basis_round=None, settings=None, hi
     intersection = previous & frozenset(by_round[basis - 1].numbers) if basis - 1 in by_round else frozenset()
     frequencies = Counter(n for d in recent for n in d.numbers)  # 보너스 제외
     config = settings or (FilterSettings(enabled_ids=tuple(enabled)) if enabled - set(FILTER_IDS) else None)
+    f06_minimum = config.f06_min_occurrences if config else F06_MIN_OCCURRENCES
     before = history_before if history_before is not None else basis
     similarity_history = ()
     if config and 'F11' in enabled:
         similarity_history = select_similarity_history(selected, before, config)
     return FilterContext(basis, by_round[basis].draw_date, tuple(d.round for d in recent),
-                         previous, intersection, frozenset(n for n, c in frequencies.items() if c >= F06_MIN_OCCURRENCES),
+                         previous, intersection, frozenset(n for n, c in frequencies.items() if c >= f06_minimum),
                          tuple(sorted(frequencies.items())), config, similarity_history, before if config else None)
 
 

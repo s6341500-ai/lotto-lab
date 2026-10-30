@@ -130,7 +130,8 @@ def _validate_snapshot(target_round, target, prior, enabled, config=None):
         try:
             lookback = {'F01': 2, 'F02': 1, 'F06': 10}[fid]
             window = tuple(d for d in prior if d.round >= target_round - lookback)
-            contexts[fid] = build_context(window, (fid,), target_round - 1)
+            contexts[fid] = build_context(window, (fid,), target_round - 1,
+                                          settings=config if fid == 'F06' else None)
         except ValueError as exc:
             context_errors[fid] = f'분석 불가: {exc}'
     pair_count = consecutive_pairs(combo)
@@ -176,7 +177,8 @@ def _validate_snapshot(target_round, target, prior, enabled, config=None):
             frequencies = dict(ctx.frequencies)
             offending = {n: frequencies[n] for n in combo if n in ctx.f06_excluded}
             passed = f06(combo, ctx.f06_excluded)
-            detail = f'직전 10회({target_round - 10}~{target_round - 1}회) 3회 이상 출현한 실제 당첨번호와 출현 횟수 {offending or "없음"} (보너스 제외)'
+            minimum = config.f06_min_occurrences if config else 3
+            detail = f'직전 10회({target_round - 10}~{target_round - 1}회) {minimum}회 이상 출현한 실제 당첨번호와 출현 횟수 {offending or "없음"} (보너스 제외)'
             if active:
                 for n in ctx.f06_excluded:
                     exclusions.setdefault(n, []).append(f'F06: 직전 10회 {frequencies[n]}회 출현')

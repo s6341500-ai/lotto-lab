@@ -80,9 +80,12 @@ def test_f04_dropdown_applies_and_survives_menu_change(tmp_path, monkeypatch):
     app.sidebar.radio[0].set_value('조건 설정').run()
     selector = next(s for s in app.selectbox if s.label.startswith('F04 '))
     assert selector.value == 2 and len(selector.options) == 5
-    selector.set_value(4).run()
+    selector.set_value(3).run()
+    next(s for s in app.selectbox if s.label.startswith('F06 ')).set_value(4).run()
     assert not app.exception
-    assert app.session_state['numeric_config']['section_max'] == 4
+    assert app.session_state['numeric_config']['section_max'] == 3
+    assert app.session_state['numeric_config']['f06_min_occurrences'] == 4
     app.sidebar.radio[0].set_value('번호 추출').run()
-    assert next(s for s in app.selectbox if s.label.startswith('F04 ')).value == 4
+    assert next(s for s in app.selectbox if s.label.startswith('F04 ')).value == 3
+    assert next(s for s in app.selectbox if s.label.startswith('F06 ')).value == 4
     assert not app.exception

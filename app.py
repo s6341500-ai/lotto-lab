@@ -80,6 +80,7 @@ if 'numeric_config' not in st.session_state:
     st.session_state.filter_config = {f: old_flags.get(f, f in initial) for f in ALL_FILTER_IDS}
     st.session_state.numeric_config = {k: v for k, v in asdict(initial).items() if k != 'enabled_ids'}
 st.session_state.numeric_config.setdefault('section_max', 2)
+st.session_state.numeric_config.setdefault('f06_min_occurrences', 3)
 
 
 def current_settings():
@@ -127,6 +128,11 @@ def render_controls(prefix, draws, start, end, extraction_count=5):
                  index=st.session_state.numeric_config['section_max'] - 2,
                  format_func=lambda n: '6개 (제한 없음)' if n == 6 else f'{n}개',
                  key=prefix + 'param_section_max', on_change=change_value, args=('section_max',))
+    st.selectbox('F06 최근 10회 제외 기준 (보너스 제외)', [2, 3, 4, 5],
+                 index=st.session_state.numeric_config['f06_min_occurrences'] - 2,
+                 format_func=lambda n: f'{n}회 이상 출현 시 제외',
+                 key=prefix + 'param_f06_min_occurrences', on_change=change_value,
+                 args=('f06_min_occurrences',))
     for fid in COMBINATION_FILTER_IDS:
         control, rate = st.columns([3, 4])
         with control:

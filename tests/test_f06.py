@@ -57,6 +57,7 @@ def test_f06_only_last_ten_confirmed_rounds_and_missing_round_rejected():
 def test_f06_existing_preset_schema_has_no_saved_threshold(tmp_path):
     # Existing presets persist the F06 enabled flag, never its old hardcoded 2.
     config = asdict(FilterSettings(enabled_ids=('F06',)))
+    config.pop('f06_min_occurrences')
     assert not any('f06' in key.lower() for key in config)
     path = tmp_path / 'settings.json'
     path.write_text(json.dumps({'version': 1, 'default': config,
@@ -70,3 +71,30 @@ def test_f06_existing_preset_schema_has_no_saved_threshold(tmp_path):
     assert 1 in build_context(history(3), loaded).f06_excluded
     assert path.read_bytes() == before
     assert '3\ud68c' in DESCRIPTIONS['F06']
+
+
+def test_f04_three_f06_four_shared_by_extraction_backtest_and_saved_settings(tmp_path):
+    from engine import analyze, generate_numbers
+    from filters import f04
+
+    config = FilterSettings(enabled_ids=('F04', 'F06'), section_max=3,
+                            f06_min_occurrences=4)
+    store = SettingsStore(tmp_path / 'selected.json')
+    store.save_default(config)
+    store.save_preset('selected', config)
+    restored = SettingsStore(store.path)
+    assert restored.default() == restored.load_preset('selected') == config
+    assert FilterSettings.from_dict(json.loads(config.snapshot())) == config
+    ctx = build_context(history(3), restored.default())
+    assert 1 not in ctx.f06_excluded  # Three appearances remain allowed.
+    assert 1 in build_context(history(4), config).f06_excluded
+    result = analyze(ctx, config.combination_ids, seed=7,
+                     universe=(1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 30, 40))
+    picks = generate_numbers(result, count=1)
+    assert picks and all(f04(c, 3) and ctx.f06_excluded.isdisjoint(c) for c in picks)
+    target = Draw(11, (FIRST_DRAW + timedelta(weeks=10)).isoformat(),
+                  (1, 3, 5, 10, 30, 40), 45)
+    allowed = validate_round(history(3) + [target], 11, config)
+    assert all(v.passed for v in allowed.filters if v.filter_id in ('F04', 'F06'))
+    rejected = validate_round(history(4) + [target], 11, config)
+    assert not next(v for v in rejected.filters if v.filter_id == 'F06').passed
