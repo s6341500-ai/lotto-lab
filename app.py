@@ -81,6 +81,7 @@ if 'numeric_config' not in st.session_state:
     old_flags = st.session_state.get('filter_config', {})
     st.session_state.filter_config = {f: old_flags.get(f, f in initial) for f in ALL_FILTER_IDS}
     st.session_state.numeric_config = {k: v for k, v in asdict(initial).items() if k != 'enabled_ids'}
+st.session_state.numeric_config.setdefault('section_max', 2)
 
 
 def current_settings():
@@ -124,6 +125,10 @@ def render_controls(prefix, draws, start, end, extraction_count=5):
         st.session_state.numeric_config[name] = st.session_state[prefix + 'param_' + name]
 
     rate_slots = {}
+    st.selectbox('F04 구간별 최대 허용 개수', [2, 3, 4, 5, 6],
+                 index=st.session_state.numeric_config['section_max'] - 2,
+                 format_func=lambda n: '6개 (제한 없음)' if n == 6 else f'{n}개',
+                 key=prefix + 'param_section_max', on_change=change_value, args=('section_max',))
     for fid in COMBINATION_FILTER_IDS:
         control, rate = st.columns([3, 4])
         with control:

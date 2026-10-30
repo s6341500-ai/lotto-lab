@@ -87,7 +87,7 @@ def analyze(context, enabled=FILTER_IDS, seed=2026, universe=range(1, 46)):
     index_seconds = time.perf_counter() - index_start if sim_index else 0.0
     checks = (
         lambda c: f01(c, context.f01_excluded),
-        lambda c: f02(c, context.previous), f03, f04, f05,
+        lambda c: f02(c, context.previous), f03, lambda c: f04(c, config.section_max), f05,
         lambda c: f06(c, context.f06_excluded), f07,
         lambda c: f08(c, config.end_digit_max), lambda c: f09(c, config.max_gap),
         lambda c: f10(c, config.low_boundary, config.low_min, config.low_max, config.high_min, config.high_max),

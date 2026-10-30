@@ -164,9 +164,10 @@ def _validate_snapshot(target_round, target, prior, enabled, config=None):
             passed = f03(combo)
             detail = f'연속쌍 {pair_count}개 ({PATTERN_LABELS[classify_consecutive(combo)]}); 0~1쌍만 적격. 3:2는 5조합 전체 구성 규칙'
         elif fid == 'F04':
-            passed = f04(combo)
-            over = {('1~9', '10~19', '20~29', '30~39', '40~45')[b]: count for b, count in buckets.items() if count > 2}
-            detail = f'구간별 최대 2개; 초과 구간 {over or "없음"}'
+            maximum = config.section_max if config else 2
+            passed = f04(combo, maximum)
+            over = {('1~9', '10~19', '20~29', '30~39', '40~45')[b]: count for b, count in buckets.items() if count > maximum}
+            detail = f'구간별 최대 {maximum}개; 초과 구간 {over or "없음"}'
         elif fid == 'F05':
             passed = f05(combo)
             detail = f'3개 이상 연속 금지; 발견된 연속 3개 {triples or "없음"}'

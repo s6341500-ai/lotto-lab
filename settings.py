@@ -14,6 +14,7 @@ F06_MIN_OCCURRENCES = 3
 @dataclass(frozen=True)
 class FilterSettings:
     enabled_ids: tuple[str, ...] = ALL_FILTER_IDS
+    section_max: int = 2
     end_digit_max: int = 2
     max_gap: int = 20
     low_boundary: int = 22
@@ -34,7 +35,7 @@ class FilterSettings:
         if len(set(ids)) != len(ids) or set(ids) - set(ALL_FILTER_IDS):
             raise ValueError('알 수 없거나 중복된 필터 설정입니다.')
         object.__setattr__(self, 'enabled_ids', tuple(f for f in ALL_FILTER_IDS if f in ids))
-        bounds = {'end_digit_max': (1, 6), 'max_gap': (1, 44), 'low_boundary': (1, 44),
+        bounds = {'section_max': (2, 6), 'end_digit_max': (1, 6), 'max_gap': (1, 44), 'low_boundary': (1, 44),
                   'low_min': (0, 6), 'low_max': (0, 6), 'high_min': (0, 6), 'high_max': (0, 6),
                   'similarity_threshold': (1, 6), 'history_n': (1, 100000),
                   'sum_min': (21, 255), 'sum_max': (21, 255),

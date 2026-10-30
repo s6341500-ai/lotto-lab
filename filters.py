@@ -12,7 +12,7 @@ DESCRIPTIONS = {
     'F01': '최근 2회 모두 나온 번호 제외',
     'F02': '직전 회차와 중복 최대 1개',
     'F03': '연속 0~1쌍 적격 · 추출 5개 3:2 / 10개 6:4',
-    'F04': '번호 구간별 최대 2개',
+    'F04': '번호 구간별 최대 개수 선택 (기본 2개)',
     'F05': '3개 이상 연속 금지',
     'F06': f'확정된 최근 10회에서 {F06_MIN_OCCURRENCES}회 이상 나온 번호 제외 (보너스 제외)',
     'F07': '홀수 개수 2·3·4개 허용',
@@ -93,12 +93,12 @@ def f03(combo):
     return consecutive_pairs(combo) <= 1
 
 
-def f04(combo):
+def f04(combo, maximum=2):
     buckets = [0] * 5
     for n in combo:
         bucket = n // 10  # 1~9 / 10~19 / 20~29 / 30~39 / 40~45
         buckets[bucket] += 1
-        if buckets[bucket] > 2:
+        if buckets[bucket] > maximum:
             return False
     return True
 
