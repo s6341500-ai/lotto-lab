@@ -93,3 +93,14 @@ py -3.11 -m venv .venv
 Windows의 Chrome 기본 설치 경로를 사용합니다. 다른 환경은 `LOTTO_LAB_CHROME`에 Chromium 실행 파일 경로를 지정하거나 Playwright Chromium을 설치합니다. 모바일 검사는 별도의 임시 DB와 `LOTTO_LAB_AUTO_UPDATE=0`을 사용해 원본 DB와 외부 API 요청을 건드리지 않습니다. 프로파일의 로컬 Windows 측정은 무료 클라우드에서의 시간·메모리·타임아웃 보장이 아닙니다.
 
 환경 변수 `LOTTO_LAB_DATA_DIR`로 별도 데이터 폴더를 지정할 수 있습니다. 지정하지 않으면 프로젝트의 `data/`를 사용합니다. `LOTTO_LAB_AUTO_UPDATE=0`은 접속 시 자동 확인만 끄며 수동 업데이트 버튼은 유지합니다.
+
+
+### 수집·복원 수정 (2026-10-30)
+
+`seed/draws.json`은 보존하고 공식 전체 조회와 대조한 `seed/draws-001247.json`을 추가했습니다. 배포할 저장소에 두 파일 모두 포함하세요. 기본 DB는 최초 생성뿐 아니라 빈 DB 및 누락 회차도 검증된 스냅샷에서 복원합니다. 기존 회차와 충돌하면 덮어쓰지 않습니다. `LOTTO_LAB_DATA_DIR`을 지정해도 기본 DB에 동일한 복원이 적용됩니다. 명시적으로 지정한 별도 테스트 DB는 자동 복원하지 않습니다.
+
+공식 조회는 `lt645/selectPstLt645Info.do`(최신/전체), `lt645/selectPstLt645InfoNew.do`(과거 회차/대체 최근 조회)를 사용합니다. 후자는 주변 회차도 반환하므로 요청한 회차만 선택합니다. 모든 회차는 추첨일·번호 범위·중복을 검증합니다. 정상적인 연속 데이터가 있으면 최신 조회 및 신규·누락 회차만 요청합니다. 실패해도 저장된 데이터와 마지막 성공 시점을 유지합니다.
+
+Streamlit Cloud의 로컬 SQLite는 영구 저장소가 아닙니다. 재배포 시 보장되는 복원 범위는 GitHub에 커밋한 스냅샷까지입니다. 실행 중 수집한 추가 회차는 GitHub에 자동 저장되지 않으며 재시작 후 온라인 재수집이 필요합니다. 복원 기준을 올리려면 신뢰할 수 있는 환경에서 공식 전체 결과를 검증하고 새 `seed/draws-XXXXXX.json`을 추가해 커밋하며, `scripts/build_cloud_bundle.py`의 배포 목록에도 추가하세요. 기존 스냅샷을 덮어쓰지 마세요.
+
+새 배포 폴더는 `.runtime/python/python.exe scripts/build_cloud_bundle.py dist/lotto-lab-recovery-1247-v2`로 만들었습니다. 기존 dist는 보존했습니다. 실제 Cloud 재배포 후 대시보드에서 저장 수·최신 회차·누락 수·출처·갱신 결과를 확인하세요.

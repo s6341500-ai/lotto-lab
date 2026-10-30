@@ -330,6 +330,9 @@ if menu == '대시보드':
     st.caption('역대 당첨번호를 검증하고 안전하게 보관합니다.')
     if db.get_meta('seed_source'):
         st.caption(db.get_meta('seed_source'))
+    st.caption('데이터 출처: ' + (db.get_meta('data_source') or '배포에 포함된 검증된 동행복권 스냅샷'))
+    st.caption('마지막 수집 성공: ' + (db.get_meta('last_success') or '기록 없음 · 초기 데이터로 분석 가능'))
+    st.caption('재배포 시 버전 관리된 seed 스냅샷에서 복원합니다. 실행 중 SQLite 변경은 GitHub에 자동 반영되지 않습니다.')
     if st.button('↻ 수동 새로고침', type='primary'):
         update()
     status = json.loads(db.get_meta('update_status') or '{}')

@@ -1,7 +1,7 @@
 {
-  "app.py": "442a5e5e3008be2cdd34b3148f01a207724ec3b6eaad4104e6fc582931fe9afc",
-  "collector.py": "dda9d50be17ffdf340ccfcea0f7151bc9723cb36ff66db8cfbd05cd634b4c73f",
-  "database.py": "55d0e4b679a781eae1d5254ec2b571068d29977905ffcaa0b2432810b6db136a",
+  "app.py": "5ac6f09df5268574fbedc61f9d6a4cd509e42f7bc29ab00e9635ee3458344e2b",
+  "collector.py": "e982bc3c8e36c46189dded7b083d14243b468f7972d2fa8a39c715529e2b9985",
+  "database.py": "9b093a3787d1ea6038f47a3ecbbaeaa549b37732066ccc0433ee9a24fc595072",
   "filters.py": "a8f488eda5242e3306e61ef21b5dd6039122384aefbfae39ae7f6c6effe30f70",
   "engine.py": "52de86bd983be88fc4e322c7c5e1f2582378eebc88cca9341fcc323fdd1b81c5",
   "validator.py": "dc48d9c48cc2bff9c172c772aa13fd4e21009cdc35aaf9a9c7d72e785d5162c3",
@@ -14,9 +14,10 @@
   "requirements.txt": "b1b318d9316124b99473a529b5db9985af3c13174cb6a01389da5a05d30e3948",
   "requirements-dev.txt": "b4bf80b86dcf7c27bb1e4bfc5e8ccbf61a2c0dff5bb973530aced137c9200701",
   "README.md": "e916de889d5178076221701ca7959b264abde80e8d7399e4ed4aec78365133d2",
-  "DEPLOYMENT.md": "b449fd0ed35c4c88c51833eae883b109d050868458cafd3c73a770aaf515c2b1",
+  "DEPLOYMENT.md": "e1d81dafd991e02e582bc70ddb53dfbc000562544ef395c37c3ac9eff8d6d041",
   ".gitignore": "7dc3c5f90b0b2ee40f93f9b7b9457d2bd6183e2ea5636760074db1e9cd6b0365",
   ".streamlit/config.toml": "a5c1f0e467f043327e1bec148b6270e0b84519cccd5a69e581bddc204a7b3a3a",
   "seed/draws.json": "5c699dc42a4c624a92379f35a571d5fa9c9e0d3112bf85a6c9c2ee708dd2edbc",
-  "data/.gitkeep": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  "data/.gitkeep": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "seed/draws-001247.json": "291ffd46a41257827b00638658f4f22a247d7547c04464cd1f339565e216854d"
 }

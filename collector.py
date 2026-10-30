@@ -8,6 +8,7 @@ from database import Database
 from validator import Draw, FIRST_DRAW, KST, today_kst, validate_draw
 
 URL = 'https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do'
+HISTORY_URL = 'https://www.dhlottery.co.kr/lt645/selectPstLt645InfoNew.do'
 
 
 class CollectionError(RuntimeError):
@@ -49,12 +50,16 @@ class Collector:
                 self.sleep(max(0, self.interval - (time.monotonic() - self.last_request)))
             self.last_request = time.monotonic()
             try:
-                response = self.session.get(URL, params={'srchLtEpsd': round_no}, timeout=self.timeout,
+                historical = type(round_no) is int or round_no == 'recent'
+                params = ({'srchDir': 'center', 'srchLtEpsd': round_no} if type(round_no) is int
+                          else {} if round_no in ('latest', 'recent') else {'srchLtEpsd': round_no})
+                response = self.session.get(HISTORY_URL if historical else URL, params=params, timeout=self.timeout,
                                             headers={'Accept': 'application/json', 'User-Agent': 'LottoLab/1.0'})
                 response.raise_for_status()
                 if 'json' not in response.headers.get('Content-Type', '').lower():
                     raise CollectionError(f'JSON 대신 {response.headers.get("Content-Type", "알 수 없는 형식")} 응답: 차단 또는 주소 변경 가능')
-                return parse_response(response.json())
+                draws = parse_response(response.json())
+                return [d for d in draws if d.round == round_no] if type(round_no) is int else draws
             except (requests.RequestException, ValueError, CollectionError) as exc:
                 if attempt == self.retries:
                     raise CollectionError(f'{round_no} 조회 실패 ({attempt + 1}회 시도): {exc}') from exc
@@ -65,12 +70,18 @@ class Collector:
         added = 0
         try:
             # 실제 검증한 all 조회로 최신 회차를 찾는다. 무한 순차 탐색을 하지 않는다.
-            draws = self.fetch()
+            stored = db.all()  # Validate all recoverable rows before collection.
+            complete = bool(stored) and not db.missing(stored[-1].round)
+            try:
+                draws = self.fetch('latest') if complete else self.fetch()
+                source = URL
+            except CollectionError:
+                draws = self.fetch('recent')
+                source = HISTORY_URL
             if not draws:
                 raise CollectionError('전체 조회가 비어 있어 최신 발표 회차를 확인할 수 없습니다.')
             latest = max(d.round for d in draws)
-            for draw in sorted(draws, key=lambda d: d.round):
-                added += db.save(draw)
+            added += db.save_many(sorted(draws, key=lambda d: d.round))
             # 전체 응답에 누락된 회차만 제한된 범위에서 재조회한다.
             for number in db.missing(latest):
                 rows = self.fetch(number)
@@ -82,9 +93,17 @@ class Collector:
             if latest < expected:
                 raise CollectionError(f'최신 응답은 {latest}회입니다. {latest + 1}회 이후는 미발표 또는 게시 지연으로 최신성 확인이 필요합니다.')
             result = {'ok': True, 'checked_at': started, 'added': added, 'latest': latest,
+                      'source': source,
                       'message': f'{latest}회까지 저장 완료 · 새로 저장 {added}회 · 누락 0회'}
         except (CollectionError, ValueError) as exc:
             result = {'ok': False, 'checked_at': started, 'added': added, 'message': str(exc)}
+        stored = db.all()
+        result['stored_count'] = len(stored)
+        result['stored_latest'] = stored[-1].round if stored else None
+        result['missing'] = db.missing(max(result.get('latest', 0), stored[-1].round if stored else 0))
+        if result['ok']:
+            db.set_meta('data_source', result['source'])
+            db.set_meta('last_success', started)
         db.set_meta('update_status', json.dumps(result, ensure_ascii=False))
         return result
 

@@ -12,6 +12,10 @@ DEFAULT_DB = DATA_DIR / 'lotto.db'
 def seed_draws(path=None):
     """Public draw facts only; validate the entire seed before writing anything."""
     source = Path(path) if path else ROOT / 'seed' / 'draws.json'
+    if path is None:
+        snapshots = sorted((ROOT / 'seed').glob('draws-*.json'), reverse=True)
+        if snapshots:
+            source = snapshots[0]
     data = json.loads(source.read_text(encoding='utf-8'))
     if data['version'] != 1:
         raise ValueError('지원하지 않는 초기 데이터 형식입니다.')
@@ -25,7 +29,7 @@ def seed_draws(path=None):
 class Database:
     def __init__(self, path=DEFAULT_DB):
         self.path = Path(path)
-        restore = (not self.path.exists() and self.path.resolve() == DEFAULT_DB.resolve()
+        restore = (self.path.resolve() == DEFAULT_DB.resolve()
                    and (ROOT / 'seed' / 'draws.json').exists())
         initial = seed_draws() if restore else []
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -34,9 +38,14 @@ class Database:
             con.execute(f'CREATE TABLE IF NOT EXISTS draws (round INTEGER PRIMARY KEY CHECK(round > 0), draw_date TEXT NOT NULL, {checks}, bonus INTEGER NOT NULL CHECK(bonus BETWEEN 1 AND 45))')
             con.execute('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
             if initial:
-                con.executemany('INSERT INTO draws VALUES (?,?,?,?,?,?,?,?,?)',
+                existing = {r[0]: r for r in con.execute('SELECT * FROM draws')}
+                for d in initial:
+                    row = (d.round, d.draw_date, *d.numbers, d.bonus)
+                    if d.round in existing and existing[d.round] != row:
+                        raise ValueError(f'{d.round}회 초기 데이터 충돌: 기존 DB를 보존합니다.')
+                con.executemany('INSERT OR IGNORE INTO draws VALUES (?,?,?,?,?,?,?,?,?)',
                                 [(d.round, d.draw_date, *d.numbers, d.bonus) for d in initial])
-                con.execute('INSERT INTO metadata VALUES (?,?)',
+                con.execute('INSERT OR IGNORE INTO metadata VALUES (?,?)',
                             ('seed_source', f'배포 초기 데이터 {len(initial)}회 · 최신 여부는 수집으로 확인 필요'))
 
     @contextmanager
@@ -57,9 +66,24 @@ class Database:
                 raise ValueError(f'{d.round}회 기존 데이터와 충돌합니다.')
             return con.execute('INSERT OR IGNORE INTO draws VALUES (?,?,?,?,?,?,?,?,?)', row).rowcount
 
+    def save_many(self, draws):
+        """Validate and check every conflict before committing the batch."""
+        validated = [validate_draw(d) for d in draws]
+        if len({d.round for d in validated}) != len(validated):
+            raise ValueError('저장 요청에 중복 회차가 있습니다.')
+        added = 0
+        with self.connect() as con:
+            for d in validated:
+                row = (d.round, d.draw_date, *d.numbers, d.bonus)
+                old = con.execute('SELECT * FROM draws WHERE round=?', (d.round,)).fetchone()
+                if old and old != row:
+                    raise ValueError(f'{d.round}회 기존 데이터와 충돌합니다.')
+                added += con.execute('INSERT OR IGNORE INTO draws VALUES (?,?,?,?,?,?,?,?,?)', row).rowcount
+        return added
+
     def all(self):
         with self.connect() as con:
-            return [Draw(r[0], r[1], tuple(r[2:8]), r[8]) for r in con.execute('SELECT * FROM draws ORDER BY round')]
+            return [validate_draw(Draw(r[0], r[1], tuple(r[2:8]), r[8])) for r in con.execute('SELECT * FROM draws ORDER BY round')]
 
     def missing(self, latest):
         stored = {d.round for d in self.all()}
