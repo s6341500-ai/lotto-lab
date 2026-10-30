@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from itertools import combinations
 from settings import FilterSettings, COMBINATION_FILTER_IDS, ALL_FILTER_IDS
+from settings import F06_MIN_OCCURRENCES
 from validator import validate_draw
 
 FILTER_IDS = tuple(f'F{i:02d}' for i in range(1, 8))
@@ -13,7 +14,7 @@ DESCRIPTIONS = {
     'F03': '연속 0~1쌍 적격 · 추출 5개 3:2 / 10개 6:4',
     'F04': '번호 구간별 최대 2개',
     'F05': '3개 이상 연속 금지',
-    'F06': '최근 10회에서 2회 이상 나온 번호 제외',
+    'F06': f'확정된 최근 10회에서 {F06_MIN_OCCURRENCES}회 이상 나온 번호 제외 (보너스 제외)',
     'F07': '홀수 개수 2·3·4개 허용',
     'F08': '같은 끝자리 개수 제한',
     'F09': '인접 번호 최대 간격 제한',
@@ -66,7 +67,7 @@ def build_context(draws, enabled=FILTER_IDS, basis_round=None, settings=None, hi
     if config and 'F11' in enabled:
         similarity_history = select_similarity_history(selected, before, config)
     return FilterContext(basis, by_round[basis].draw_date, tuple(d.round for d in recent),
-                         previous, intersection, frozenset(n for n, c in frequencies.items() if c >= 2),
+                         previous, intersection, frozenset(n for n, c in frequencies.items() if c >= F06_MIN_OCCURRENCES),
                          tuple(sorted(frequencies.items())), config, similarity_history, before if config else None)
 
 

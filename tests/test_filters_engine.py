@@ -68,12 +68,12 @@ def test_f01_f06_overlap_and_no_bonus():
     assert result.stages[5].removed == 0
 
 
-def test_exactly_two_occurrences_threshold():
+def test_f06_exactly_two_occurrences_allowed():
     rows = history()
     rows[-1] = replace(rows[-1], numbers=(2, 4, 6, 8, 10, 12))
     rows[-2] = replace(rows[-2], numbers=(2, 14, 16, 18, 20, 22))
     ctx = build_context(rows)
-    assert 2 in ctx.f06_excluded and 4 not in ctx.f06_excluded
+    assert 2 not in ctx.f06_excluded and 4 not in ctx.f06_excluded
     assert ctx.f01_excluded == {2}
 
 

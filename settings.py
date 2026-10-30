@@ -8,6 +8,7 @@ import tempfile
 LEGACY_FILTER_IDS = tuple(f'F{i:02d}' for i in range(1, 8))
 COMBINATION_FILTER_IDS = tuple(f'F{i:02d}' for i in range(1, 13))
 ALL_FILTER_IDS = COMBINATION_FILTER_IDS + ('F13',)
+F06_MIN_OCCURRENCES = 3
 
 
 @dataclass(frozen=True)

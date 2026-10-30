@@ -175,7 +175,7 @@ def _validate_snapshot(target_round, target, prior, enabled, config=None):
             frequencies = dict(ctx.frequencies)
             offending = {n: frequencies[n] for n in combo if n in ctx.f06_excluded}
             passed = f06(combo, ctx.f06_excluded)
-            detail = f'직전 10회({target_round - 10}~{target_round - 1}회) 2회 이상 출현한 실제 당첨번호와 출현 횟수 {offending or "없음"}'
+            detail = f'직전 10회({target_round - 10}~{target_round - 1}회) 3회 이상 출현한 실제 당첨번호와 출현 횟수 {offending or "없음"} (보너스 제외)'
             if active:
                 for n in ctx.f06_excluded:
                     exclusions.setdefault(n, []).append(f'F06: 직전 10회 {frequencies[n]}회 출현')
